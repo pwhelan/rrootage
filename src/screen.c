@@ -31,8 +31,12 @@
 #define SCREEN_HEIGHT 480
 #define LOWRES_SCREEN_WIDTH 320
 #define LOWRES_SCREEN_HEIGHT 240
+
 #ifdef MACOSX
 #include <sys/syslimits.h>
+#define CONTROLLERTYPE_XBOX360 1
+#define CONTROLLERTYPE_PS3     2
+int controller_type;
 #endif
 
 static int screenWidth, screenHeight;
@@ -125,10 +129,20 @@ void initSDL() {
   if ( lowres ) {
     screenWidth  = LOWRES_SCREEN_WIDTH;
     screenHeight = LOWRES_SCREEN_HEIGHT;
+#ifdef MACOSX
+  } else if ( windowMode ) {
+    screenWidth  = SCREEN_WIDTH;
+    screenHeight = SCREEN_HEIGHT;
+  } else {
+    screenWidth  = 0;
+    screenHeight = 0;
+  }
+#else
   } else {
     screenWidth  = SCREEN_WIDTH;
     screenHeight = SCREEN_HEIGHT;
   }
+#endif
 
   /* Initialize SDL */
 #ifdef MACOSX
@@ -140,6 +154,20 @@ void initSDL() {
     fprintf(stderr, "Unable to initialize SDL Joystick: %s\n", SDL_GetError());
   } else {
       stick = SDL_JoystickOpen(0);
+      if (stick != NULL) {
+	fprintf(stderr, "Controller name: [%s]\n", SDL_JoystickName(0));
+	if (strcmp("Controller", SDL_JoystickName(0)) == 0) {
+	  controller_type = CONTROLLERTYPE_XBOX360;
+	} else if (strcmp("PLAYSTATION(R)3 Controller", SDL_JoystickName(0)) == 0) {
+	  controller_type = CONTROLLERTYPE_PS3;
+	}
+	fprintf(stderr, "Controller type: %i\n", controller_type);
+      }
+  }
+  if (screenWidth == 0) {
+    SDL_VideoInfo* vinf = SDL_GetVideoInfo();
+    screenWidth = vinf->current_w;
+    screenHeight = vinf->current_h;
   }
 #else
   if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0 ) {
@@ -159,12 +187,6 @@ void initSDL() {
     SDL_Quit();
     exit(2);
   }
-
-#ifdef MACOSX
-  SDL_VideoInfo* vinf = SDL_GetVideoInfo();
-  screenWidth = vinf->current_w;
-  screenHeight = vinf->current_h;
-#endif
 
 #ifndef MACOSX
   stick = SDL_JoystickOpen(0);
@@ -947,12 +969,45 @@ int drawTimeCenter(int n, int x ,int y, int s, int r, int g, int b) {
 #define JOYSTICK_AXIS 16384
 
 int getPadState() {
+#ifdef MACOSX
+  int btnr = 0, btnl = 0, btnd = 0, btnu = 0;
+#endif
   int x = 0, y = 0;
   int pad = 0;
   if ( stick != NULL ) {
     x = SDL_JoystickGetAxis(stick, 0);
     y = SDL_JoystickGetAxis(stick, 1);
+#ifdef MACOSX
+    switch (controller_type) {
+      case CONTROLLERTYPE_XBOX360:
+	btnr = SDL_JoystickGetButton(stick, 3);
+	btnl = SDL_JoystickGetButton(stick, 2);
+	btnd = SDL_JoystickGetButton(stick, 1);
+	btnu = SDL_JoystickGetButton(stick, 0);
+	break;
+      case CONTROLLERTYPE_PS3:
+	btnr = SDL_JoystickGetButton(stick, 5);
+	btnl = SDL_JoystickGetButton(stick, 7);
+	btnd = SDL_JoystickGetButton(stick, 6);
+	btnu = SDL_JoystickGetButton(stick, 4);
+	break;
+    }
+#endif
   }
+#ifdef MACOSX
+  if ( keys[SDLK_RIGHT] == SDL_PRESSED || keys[SDLK_KP6] == SDL_PRESSED || x > JOYSTICK_AXIS || btnr ) {
+    pad |= PAD_RIGHT;
+  }
+  if ( keys[SDLK_LEFT] == SDL_PRESSED || keys[SDLK_KP4] == SDL_PRESSED || x < -JOYSTICK_AXIS || btnl ) {
+    pad |= PAD_LEFT;
+  }
+  if ( keys[SDLK_DOWN] == SDL_PRESSED || keys[SDLK_KP2] == SDL_PRESSED || y > JOYSTICK_AXIS || btnd ) {
+    pad |= PAD_DOWN;
+  }
+  if ( keys[SDLK_UP] == SDL_PRESSED ||  keys[SDLK_KP8] == SDL_PRESSED || y < -JOYSTICK_AXIS || btnu ) {
+    pad |= PAD_UP;
+  }
+#else
   if ( keys[SDLK_RIGHT] == SDL_PRESSED || keys[SDLK_KP6] == SDL_PRESSED || x > JOYSTICK_AXIS ) {
     pad |= PAD_RIGHT;
   }
@@ -965,6 +1020,7 @@ int getPadState() {
   if ( keys[SDLK_UP] == SDL_PRESSED ||  keys[SDLK_KP8] == SDL_PRESSED || y < -JOYSTICK_AXIS ) {
     pad |= PAD_UP;
   }
+#endif
   return pad;
 }
 
@@ -974,10 +1030,32 @@ int getButtonState() {
   int btn = 0;
   int btn1 = 0, btn2 = 0, btn3 = 0, btn4 = 0;
   if ( stick != NULL ) {
+#ifdef MACOSX
+    switch (controller_type) {
+      case CONTROLLERTYPE_XBOX360:
+	btn1 = SDL_JoystickGetButton(stick, 11);
+	btn2 = SDL_JoystickGetButton(stick, 12);
+	btn3 = SDL_JoystickGetButton(stick, 13);
+	btn4 = SDL_JoystickGetButton(stick, 14);
+	break;
+      case CONTROLLERTYPE_PS3:
+	btn1 = SDL_JoystickGetButton(stick, 14);
+	btn2 = SDL_JoystickGetButton(stick, 13);
+	btn3 = SDL_JoystickGetButton(stick, 15);
+	btn4 = SDL_JoystickGetButton(stick, 12);
+	break;
+      default:
+	btn1 = SDL_JoystickGetButton(stick, 0);
+	btn2 = SDL_JoystickGetButton(stick, 1);
+	btn3 = SDL_JoystickGetButton(stick, 2);
+	btn4 = SDL_JoystickGetButton(stick, 3);
+    }
+#else
     btn1 = SDL_JoystickGetButton(stick, 0);
     btn2 = SDL_JoystickGetButton(stick, 1);
     btn3 = SDL_JoystickGetButton(stick, 2);
     btn4 = SDL_JoystickGetButton(stick, 3);
+#endif
   }
   if ( keys[SDLK_z] == SDL_PRESSED || btn1 || btn4 ) {
     if ( !buttonReversed ) {
