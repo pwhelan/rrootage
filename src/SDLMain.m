@@ -1,1 +1,0 @@
-../../sdl/devel-lite/SDLMain.m

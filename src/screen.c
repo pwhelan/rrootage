@@ -165,7 +165,7 @@ void initSDL() {
       }
   }
   if (screenWidth == 0) {
-    SDL_VideoInfo* vinf = SDL_GetVideoInfo();
+    const SDL_VideoInfo* vinf = SDL_GetVideoInfo();
     screenWidth = vinf->current_w;
     screenHeight = vinf->current_h;
   }
