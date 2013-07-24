@@ -1,1 +1,1 @@
-README.osx
+README.osx.txt
