@@ -13,7 +13,7 @@
 #include "foe.h"
 
 extern "C" {
-#include "SDL.h"
+#include <SDL2/SDL.h>
 #include <stdlib.h>
 #include <stdio.h>
 

@@ -9,7 +9,7 @@
  *
  * @version $Revision: 1.4 $
  */
-#include "SDL.h"
+#include <SDL2/SDL.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -284,10 +284,11 @@ int main(int argc, char *argv[]) {
   initTitle();
 
   while ( !done ) {
+    int numkeys = 0;
     SDL_PollEvent(&event);
-    keys = SDL_GetKeyState(NULL);
-    if ( keys[SDLK_ESCAPE] == SDL_PRESSED || event.type == SDL_QUIT ) done = 1;
-    if ( keys[SDLK_p] == SDL_PRESSED ) {
+    keys = SDL_GetKeyboardState(&numkeys);
+    if ( keys[SDL_SCANCODE_ESCAPE] == SDL_PRESSED || event.type == SDL_QUIT ) done = 1;
+    if ( keys[SDL_SCANCODE_P] == SDL_PRESSED ) {
       if ( !pPrsd ) {
 	if ( status == IN_GAME ) {
 	  status = PAUSE;

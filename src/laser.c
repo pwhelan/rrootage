@@ -9,7 +9,7 @@
  *
  * @version $Revision: 1.3 $
  */
-#include "SDL.h"
+#include <SDL2/SDL.h>
 
 #include "genmcr.h"
 #include "screen.h"
@@ -127,4 +127,3 @@ void drawLasers() {
 	      laserCnt, t);
   }
 }
-

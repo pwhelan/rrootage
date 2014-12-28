@@ -9,7 +9,7 @@
  *
  * @version $Revision: 1.4 $
  */
-#include "SDL.h"
+#include <SDL2/SDL.h>
 
 #ifdef MACOSX
 #include <OpenGL/gl.h>
